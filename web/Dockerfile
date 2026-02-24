@@ -1,5 +1,5 @@
-# Build stage
-FROM node:22-alpine AS builder
+# Build stage (slim: Alpine에서 npm install 시 exit 139 방지)
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY package.json ./
 RUN npm install
