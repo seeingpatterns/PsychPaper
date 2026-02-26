@@ -1,17 +1,9 @@
 # web + server + DB. 브라우저에서 http://localhost:8080 으로 PsychPaper 접속
 services:
-  web:
-    build: ./web
-    ports:
-      - "8080:80"
-    depends_on:
-      - server
-    restart: unless-stopped
-
   server:
     build: ./server
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
