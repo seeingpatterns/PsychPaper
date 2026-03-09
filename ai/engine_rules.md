@@ -6,7 +6,6 @@ Stack:
 
 Output requirements:
 - Give only MVP steps.
-- Prefer pg over ORMs for week-1.
 - Provide exact file paths when suggesting code changes.
 
 
