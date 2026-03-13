@@ -2,6 +2,8 @@
 
 **선행 조건**: [Phase 1](phase-1-spec-and-db.md) ~ [Phase 3](phase-3-frontend-crud.md) 완료.
 
+> 이 문서는 Phase 1~3 구현이 끝난 뒤, 실제 동작이 스펙과 맞는지 확인하고 에픽 문서(README, phase 문서, api-spec.yaml 등)를 최종 정리할 때 사용하는 **검증·정리용 체크리스트**다.
+
 ## 목표
 
 - Admin User CRUD 전체 플로우가 스펙·DB·백엔드·프론트엔드와 일치하는지 검증한다.

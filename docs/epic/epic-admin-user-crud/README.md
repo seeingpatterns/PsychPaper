@@ -14,9 +14,10 @@
 ## 현재 상태
 
 - **DB**: `admin_users` 테이블 존재 (`id`, `username`, `password_hash`, `created_at`).
-- **백엔드**: `GET /api/admin/users`(목록), `POST /api/admin/login`(로그인)만 구현. CRUD·레이어 분리 없음.
-- **프론트엔드**: `AdminUsersPage`에서 목록 조회만. 생성·수정·삭제 UI·FSD 미적용.
-- **API 스펙**: Admin User CRUD 경로·스키마 미정의.
+- **백엔드**: Admin User CRUD Phase 2 완료 — Layered/DDD 구조 + TDD, `/api/admin/users`(GET/POST/PUT/DELETE), `/api/admin/users/:id` 구현.
+- **프론트엔드**: Phase 3 완료 — FSD 구조 기반 `AdminUsersPage`에서 Admin User CRUD(목록·생성·수정·삭제) 제공.
+- **API 스펙**: `api-spec.yaml`에 Admin User CRUD 경로·스키마 정의 완료.
+- **통합·검증(Phase 4)**: 이 문서와 [phase-4-integration.md](phase-4-integration.md)의 체크리스트를 기준으로, 스펙↔백엔드↔프론트 연동을 실제로 검증하고 문서를 최종 정리한다.
 
 ## 목표 아키텍처
 
