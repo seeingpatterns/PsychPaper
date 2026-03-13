@@ -15,6 +15,27 @@ app.use(express.json())
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'psychpaper-server' })
 })
+
+app.get('/api/admin/users', async (_req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT id, username, created_at
+       FROM admin_users
+       ORDER BY id`
+    )
+    res.json({
+      users: result.rows.map((row) => ({
+        id: row.id,
+        username: row.username,
+        created_at: row.created_at,
+      })),
+    })
+  } catch (err) {
+    console.error('admin users list error:', err)
+    res.status(500).json({ ok: false, error: 'Failed to list admin users' })
+  }
+})
+
 app.post("/api/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body ?? {};
