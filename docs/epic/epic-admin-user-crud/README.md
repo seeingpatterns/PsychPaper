@@ -1,4 +1,4 @@
-# 에픽: Admin_user 테이블 CRUD
+# 에픽: Admin User 테이블 CRUD
 
 프론트엔드·백엔드·DB 설계 및 구현
 
@@ -38,6 +38,17 @@
 | **3** | [phase-3-frontend-crud.md](phase-3-frontend-crud.md) | 프론트엔드 CRUD (FSD) |
 | **4** | [phase-4-integration.md](phase-4-integration.md) | 연동·검증 및 정리 |
 
+### Phase별 의존 관계
+
+| Phase | 선행 Phase | 의존 이유 |
+|-------|------------|-----------|
+| **1** | 없음 | API 스펙·DB 계약이 단일 소스. 다른 phase가 모두 이를 기준으로 구현한다. |
+| **2** | **1** | api-spec.yaml 경로·스키마·응답 코드에 맞춰 백엔드 CRUD를 구현한다. |
+| **3** | **1**, **2** | 스펙(1)에 맞는 타입·API 클라이언트 사용, 실제 호출 대상은 백엔드(2)다. |
+| **4** | **1**, **2**, **3** | 스펙↔백엔드↔프론트 연동 검증 및 문서 정리는 전 단계 완료 후 수행한다. |
+
+의존 흐름: **1 → 2 → 3 → 4** (순차 진행). Phase 3만 1·2 완료 후 진행 가능하고, Phase 4는 1·2·3 모두 완료 후 진행한다.
+
 ## 에픽 완료 기준 (Definition of Done)
 
 - [ ] api-spec.yaml에 Admin User CRUD가 정의되어 있고, 백엔드 응답이 스펙과 일치한다.
@@ -49,6 +60,7 @@
 ## 참고
 
 - [AGENTS.md](../../../AGENTS.md)
+- [api-spec.yaml](../../../api-spec.yaml) — Phase 1에서 정의·갱신
 - [db-schema/01_admin_users.sql](../../../db-schema/01_admin_users.sql)
 - [Feature-Sliced Design](https://feature-sliced.design/)
 - [OpenAPI 3.x](https://spec.openapis.org/oas/v3.0.3)

@@ -1,5 +1,7 @@
 # Phase 4: 연동·검증 및 정리
 
+**선행 조건**: [Phase 1](phase-1-spec-and-db.md) ~ [Phase 3](phase-3-frontend-crud.md) 완료.
+
 ## 목표
 
 - Admin User CRUD 전체 플로우가 스펙·DB·백엔드·프론트엔드와 일치하는지 검증한다.
@@ -14,7 +16,7 @@
 - **작업**:
   - api-spec.yaml에 정의된 Admin User 경로·요청/응답 스키마를 한 번씩 확인.
   - 각 엔드포인트(GET 목록·단건, POST, PUT, DELETE)를 실제로 호출( curl, Postman, 또는 테스트 스크립트 )하고, 상태 코드·본문 형식이 스펙과 같은지 확인.
-- **명령 예시** (서버 실행 후):
+- **명령 예시** (서버 실행 후; 포트·호스트는 실제 환경에 맞게):
   - `curl -s http://localhost:3000/api/admin/users`
   - `curl -s -X POST http://localhost:3000/api/admin/users -H "Content-Type: application/json" -d '{"username":"test","password":"test123"}'`
   - (이후 PUT, DELETE도 동일하게)

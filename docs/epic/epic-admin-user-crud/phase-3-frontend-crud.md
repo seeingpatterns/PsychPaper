@@ -1,5 +1,7 @@
 # Phase 3: 프론트엔드 CRUD (FSD)
 
+**선행 조건**: [Phase 1](phase-1-spec-and-db.md), [Phase 2](phase-2-backend-crud.md) 완료 — api-spec 확정 및 백엔드 CRUD 동작 필요.
+
 ## 목표
 
 - Admin User CRUD UI를 **Feature-Sliced Design**에 맞게 구현한다.

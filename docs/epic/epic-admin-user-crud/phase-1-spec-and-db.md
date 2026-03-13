@@ -1,5 +1,7 @@
 # Phase 1: API 스펙 및 DB 계약
 
+**선행 조건**: 없음 (에픽의 첫 phase).
+
 ## 목표
 
 - Admin User CRUD의 **단일 소스 오브 트루스**를 api-spec.yaml에 정의한다.
@@ -11,7 +13,7 @@
 
 ### 1. api-spec.yaml 파일 생성·위치 결정
 
-- **작업**: 프로젝트 루트 또는 docs 하위에 OpenAPI 3.x YAML 파일 생성.
+- **작업**: OpenAPI 3.x YAML 파일 생성. **권장**: 프로젝트 루트 `api-spec.yaml` (다른 phase·도구에서 경로 일원화).
 - **파일**: `api-spec.yaml` (루트) 또는 `docs/api-spec.yaml`
 - **내용**: 최소 openapi, info, servers, paths, components 구조만 두고, Admin User 경로는 다음 단계에서 채움.
 
