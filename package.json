@@ -1,0 +1,13 @@
+{
+  "name": "psychpaper",
+  "private": true,
+  "description": "PsychPaper — 심리학 논문 해설 & 지식 탐색",
+  "scripts": {
+    "dev": "concurrently -n server,web -c blue,green \"npm run dev:server\" \"npm run dev:web\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:web": "cd web && npm run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
