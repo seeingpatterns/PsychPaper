@@ -1,5 +1,8 @@
 # Session-based authentication — Implementation Plan (implementation-closed)
 
+> NOTE (superseded): 이 문서는 `express-session` 기반 dev MemoryStore 도입 설계로 대체되며,
+> 실제 구현은 `docs/plans/2026-03-25-session-auth-express-session-design.md`를 기준으로 진행해야 한다.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** 서버가 세션을 소유하고, 클라이언트는 httpOnly 쿠키의 세션 토큰만 보유하며, 보호된 API는 매 요청마다 서버에서 세션을 검증한다. **MVP는 `admin_users`만 인증 주체로 사용한다.**
