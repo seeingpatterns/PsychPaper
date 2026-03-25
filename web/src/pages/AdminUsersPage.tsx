@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom'
 import { AdminUserList } from '../features/admin-user-crud/ui/AdminUserList'
 import { CreateAdminUserForm } from '../features/admin-user-crud/ui/CreateAdminUserForm'
 import { EditAdminUserForm } from '../features/admin-user-crud/ui/EditAdminUserForm'
-import { DeleteAdminUserButton } from '../features/admin-user-crud/ui/DeleteAdminUserButton'
-import { getAdminUsers } from '../shared/api/admin-user'
+import { deleteAdminUser, getAdminUsers } from '../shared/api/admin-user'
 import type { AdminUser } from '../entities/admin-user/model/types'
 import type { ApiError } from '../shared/api/client'
 
@@ -45,6 +44,20 @@ export default function AdminUsersPage() {
     setUsers((prev) => prev.filter((u) => u.id !== id))
   }
 
+  async function handleDeleteUser(user: AdminUser) {
+    const confirmed = window.confirm('정말 이 Admin User를 삭제할까요?')
+    if (!confirmed) return
+    setEditing(null)
+    setError(null)
+    try {
+      await deleteAdminUser(user.id)
+      handleDeleted(user.id)
+    } catch (err) {
+      const apiErr = err as ApiError
+      setError(apiErr.message)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
       <div className="max-w-3xl mx-auto">
@@ -79,10 +92,7 @@ export default function AdminUsersPage() {
             setShowCreate(false)
             setEditing(user)
           }}
-          onDelete={(user) => {
-            setEditing(null)
-            handleDeleted(user.id)
-          }}
+          onDelete={handleDeleteUser}
         />
 
         {showCreate && (
@@ -106,18 +116,6 @@ export default function AdminUsersPage() {
           </div>
         )}
 
-        {users.map((u) => (
-          <div
-            key={u.id}
-            className="hidden"
-          >
-            {/* for DeleteAdminUserButton tree-shaking avoid; actual button is in row via onDelete */}
-            <DeleteAdminUserButton
-              userId={u.id}
-              onDeleted={() => handleDeleted(u.id)}
-            />
-          </div>
-        ))}
       </div>
     </div>
   )
