@@ -4,11 +4,7 @@ services:
     build: ./server
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - SESSION_SECRET=change-me-in-docker
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/psychpaper
+    env_file: .env.docker
     depends_on:
       db:
         condition: service_healthy
@@ -16,15 +12,10 @@ services:
 
   db:
     image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: psychpaper
+    env_file: .env.docker
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db-schema/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s

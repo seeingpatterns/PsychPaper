@@ -2,6 +2,8 @@ import type { Request, Response } from 'express'
 import bcrypt from 'bcryptjs'
 import type { AppDeps } from '../../../app.js'
 
+const DUMMY_HASH = '$2b$10$9LRmw1hjfWk7OpamjMdlFuBKfWPNB2wOj69kWlkjTmbunkXjyybjW'
+
 const cookieOpts = () => ({
   httpOnly: true,
   path: '/',
@@ -25,12 +27,23 @@ export function createAdminAuthHandlers(deps: AppDeps) {
         `SELECT id, password_hash FROM admin_users WHERE username = $1 LIMIT 1`,
         [username]
       )
-      if (result.rowCount === 0) return res.status(401).json({ ok: false })
-      const { id, password_hash } = result.rows[0] as { id: number; password_hash: string }
-      const ok = await bcrypt.compare(password, password_hash)
-      if (!ok) return res.status(401).json({ ok: false })
-      req.session.adminUserId = id
-      return res.json({ ok: true })
+      // Timing-safe: always run bcrypt.compare regardless of user existence
+      const row = result.rows[0] as { id: number; password_hash: string } | undefined
+      const hashToCompare = row?.password_hash ?? DUMMY_HASH
+      const ok = await bcrypt.compare(password, hashToCompare)
+
+      if (!row || !ok) return res.status(401).json({ ok: false })
+
+      // Session fixation protection: regenerate session on login
+      const adminId = row.id
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error('session regenerate error:', err)
+          return res.status(500).json({ ok: false })
+        }
+        req.session.adminUserId = adminId
+        return res.json({ ok: true })
+      })
     } catch (err) {
       console.error('admin login error:', err)
       return res.status(500).json({ ok: false })

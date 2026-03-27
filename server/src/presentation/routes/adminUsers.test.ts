@@ -11,7 +11,7 @@ class FakePool {
   private adminUser = {
     id: 1,
     username: 'admin',
-    password_hash: bcrypt.hashSync('password123', 10),
+    password_hash: bcrypt.hashSync('Password123!', 10),
   }
 
   async query(sql: string, values: unknown[]): Promise<QueryResult> {
@@ -41,7 +41,7 @@ function createTestApp() {
 async function loginAsAdmin(agent: ReturnType<typeof request.agent>) {
   const loginRes = await agent.post('/api/admin/login').send({
     username: 'admin',
-    password: 'password123',
+    password: 'Password123!',
   })
   expect(loginRes.status).toBe(200)
 }
@@ -80,7 +80,7 @@ describe('GET /api/admin/users/:id', () => {
     await loginAsAdmin(agent)
     const createRes = await agent
       .post('/api/admin/users')
-      .send({ username: 'founduser', password: 'password123' })
+      .send({ username: 'founduser', password: 'Password123!' })
     expect(createRes.status).toBe(201)
     const id = createRes.body.id
     const res = await agent.get(`/api/admin/users/${id}`)
@@ -97,7 +97,7 @@ describe('POST /api/admin/users', () => {
     await loginAsAdmin(agent)
     const res = await agent
       .post('/api/admin/users')
-      .send({ username: 'newadmin', password: 'password123' })
+      .send({ username: 'newadmin', password: 'Password123!' })
     expect(res.status).toBe(201)
     expect(res.headers.location).toMatch(/\/api\/admin\/users\/\d+$/)
     expect(res.body).toHaveProperty('id')
@@ -110,8 +110,8 @@ describe('POST /api/admin/users', () => {
     const app = createTestApp()
     const agent = request.agent(app)
     await loginAsAdmin(agent)
-    await agent.post('/api/admin/users').send({ username: 'dup', password: 'password123' })
-    const res = await agent.post('/api/admin/users').send({ username: 'dup', password: 'other456' })
+    await agent.post('/api/admin/users').send({ username: 'dup', password: 'Password123!' })
+    const res = await agent.post('/api/admin/users').send({ username: 'dup', password: 'Other456!' })
     expect(res.status).toBe(409)
     expect(res.body).toMatchObject({ code: expect.any(String), message: expect.any(String) })
   })
@@ -141,7 +141,7 @@ describe('PUT /api/admin/users/:id', () => {
     await loginAsAdmin(agent)
     const createRes = await agent
       .post('/api/admin/users')
-      .send({ username: 'orig', password: 'password123' })
+      .send({ username: 'orig', password: 'Password123!' })
     const id = createRes.body.id
     const res = await agent.put(`/api/admin/users/${id}`).send({ username: 'updated' })
     expect(res.status).toBe(200)
@@ -152,8 +152,8 @@ describe('PUT /api/admin/users/:id', () => {
     const app = createTestApp()
     const agent = request.agent(app)
     await loginAsAdmin(agent)
-    await agent.post('/api/admin/users').send({ username: 'first', password: 'password123' })
-    const createRes = await agent.post('/api/admin/users').send({ username: 'second', password: 'password123' })
+    await agent.post('/api/admin/users').send({ username: 'first', password: 'Password123!' })
+    const createRes = await agent.post('/api/admin/users').send({ username: 'second', password: 'Password123!' })
     const id = createRes.body.id
     const res = await agent.put(`/api/admin/users/${id}`).send({ username: 'first' })
     expect(res.status).toBe(409)
@@ -173,9 +173,11 @@ describe('DELETE /api/admin/users/:id', () => {
     const app = createTestApp()
     const agent = request.agent(app)
     await loginAsAdmin(agent)
+    // Create a dummy user first so the next one gets id != 1 (admin's id)
+    await agent.post('/api/admin/users').send({ username: 'dummy', password: 'Password123!' })
     const createRes = await agent
       .post('/api/admin/users')
-      .send({ username: 'todel', password: 'password123' })
+      .send({ username: 'todel', password: 'Password123!' })
     const id = createRes.body.id
     const res = await agent.delete(`/api/admin/users/${id}`)
     expect(res.status).toBe(204)

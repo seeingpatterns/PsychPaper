@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import session from 'express-session'
 import type { Pool } from 'pg'
 import type { AdminUserService } from './application/admin-user/AdminUserService.js'
@@ -25,7 +26,19 @@ export function createApp(deps: AppDeps): express.Express {
     app.set('trust proxy', true)
   }
 
-  app.use(cors({ origin: true, credentials: true }))
+  app.use(helmet())
+
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',')
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+    credentials: true,
+  }))
   app.use(session({
     name: 'pp_session',
     secret: sessionSecret,

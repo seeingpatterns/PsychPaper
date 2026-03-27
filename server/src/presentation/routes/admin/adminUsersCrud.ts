@@ -5,6 +5,7 @@ const USERNAME_MIN = 3
 const USERNAME_MAX = 50
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 72
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,72}$/
 
 function parseId(id: string): number | null {
   const n = parseInt(id, 10)
@@ -30,6 +31,9 @@ function validateCreateBody(body: unknown): { username: string; password: string
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
     return { code: 'VALIDATION_ERROR', message: `password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters` }
   }
+  if (!PASSWORD_PATTERN.test(password)) {
+    return { code: 'VALIDATION_ERROR', message: 'password must include uppercase, lowercase, number, and special character' }
+  }
   return { username, password }
 }
 
@@ -51,6 +55,9 @@ function validateUpdateBody(body: unknown): { username?: string; password?: stri
     }
     if (o.password.length < PASSWORD_MIN || o.password.length > PASSWORD_MAX) {
       return { code: 'VALIDATION_ERROR', message: `password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters` }
+    }
+    if (!PASSWORD_PATTERN.test(o.password)) {
+      return { code: 'VALIDATION_ERROR', message: 'password must include uppercase, lowercase, number, and special character' }
     }
     out.password = o.password
   }
@@ -127,6 +134,9 @@ export function createAdminUsersCrudRouter(deps: AppDeps): Router {
     const id = parseId(req.params.id)
     if (id === null) {
       return errorRes(res, 400, 'VALIDATION_ERROR', 'id must be a positive integer')
+    }
+    if (id === req.session.adminUserId) {
+      return errorRes(res, 403, 'FORBIDDEN', 'Cannot delete your own account')
     }
     try {
       const deleted = await adminUserService.delete(id)
