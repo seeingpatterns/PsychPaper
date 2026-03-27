@@ -18,7 +18,8 @@ export function createAdminApiRouter(deps: AppDeps): Router {
 
   const { pool } = deps
   if (pool) {
-    const { login, logout } = createAdminAuthHandlers(deps)
+    const { me, login, logout } = createAdminAuthHandlers(deps)
+    router.get('/me', requireAdminSession, me)
     router.post('/login', login)
     router.post('/logout', requireAdminSession, logout)
   }

@@ -1,39 +1,57 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { AdminUserList } from '../features/admin-user-crud/ui/AdminUserList'
 import { CreateAdminUserForm } from '../features/admin-user-crud/ui/CreateAdminUserForm'
 import { EditAdminUserForm } from '../features/admin-user-crud/ui/EditAdminUserForm'
-import { useAdminAuth } from '../features/auth/model/useAdminAuth'
-import { AdminLoginForm } from '../features/auth/ui/AdminLoginForm'
-import { deleteAdminUser } from '../shared/api/admin-user'
+import { deleteAdminUser, getAdminUsers } from '../shared/api/admin-user'
+import { getAdminMe, logoutAdmin } from '../shared/api/admin-auth'
 import type { AdminUser } from '../entities/admin-user/model/types'
 import type { ApiError } from '../shared/api/client'
 
 export default function AdminUsersPage() {
-  const {
-    users,
-    upsertUser,
-    removeUser,
-    isAuthenticated,
-    loading,
-    error,
-    setError,
-    loginLoading,
-    loginError,
-    logoutLoading,
-    login,
-    logout,
-  } = useAdminAuth()
-
+  const navigate = useNavigate()
+  const [users, setUsers] = useState<AdminUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [logoutLoading, setLogoutLoading] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<AdminUser | null>(null)
 
+  useEffect(() => {
+    let active = true
+
+    async function loadPage() {
+      setLoading(true)
+      setError(null)
+      try {
+        await getAdminMe()
+        const list = await getAdminUsers()
+        if (!active) return
+        setUsers(list)
+      } catch (err) {
+        const apiErr = err as ApiError
+        if (apiErr.status === 401) {
+          navigate('/admin/login', { replace: true })
+          return
+        }
+        if (active) setError(apiErr.message)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    void loadPage()
+    return () => {
+      active = false
+    }
+  }, [navigate])
+
   function handleCreated(user: AdminUser) {
-    upsertUser(user)
+    setUsers((prev) => [...prev, user].sort((a, b) => a.id - b.id))
   }
 
   function handleUpdated(user: AdminUser) {
-    upsertUser(user)
+    setUsers((prev) => prev.map((item) => (item.id === user.id ? user : item)))
   }
 
   async function handleDeleteUser(user: AdminUser) {
@@ -43,17 +61,32 @@ export default function AdminUsersPage() {
     setError(null)
     try {
       await deleteAdminUser(user.id)
-      removeUser(user.id)
+      setUsers((prev) => prev.filter((item) => item.id !== user.id))
     } catch (err) {
       const apiErr = err as ApiError
+      if (apiErr.status === 401) {
+        navigate('/admin/login', { replace: true })
+        return
+      }
       setError(apiErr.message)
     }
   }
 
   async function handleLogoutClick() {
-    await logout()
-    setShowCreate(false)
-    setEditing(null)
+    setLogoutLoading(true)
+    setError(null)
+    try {
+      await logoutAdmin()
+    } catch (err) {
+      const apiErr = err as ApiError
+      if (apiErr.status !== 401) {
+        setError(apiErr.message)
+        setLogoutLoading(false)
+        return
+      }
+    }
+    setLogoutLoading(false)
+    navigate('/admin/login', { replace: true })
   }
 
   return (
@@ -67,28 +100,24 @@ export default function AdminUsersPage() {
             ← PsychPaper 홈
           </Link>
           <div className="flex items-center gap-2">
-            {isAuthenticated && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(null)
-                  setShowCreate((prev) => !prev)
-                }}
-                className="text-xs px-3 py-1 rounded bg-[var(--blue)] text-white"
-              >
-                {showCreate ? '추가 폼 닫기' : '새 Admin User 추가'}
-              </button>
-            )}
-            {isAuthenticated && (
-              <button
-                type="button"
-                onClick={handleLogoutClick}
-                disabled={logoutLoading}
-                className="text-xs px-3 py-1 rounded border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface2)] disabled:opacity-60"
-              >
-                {logoutLoading ? '로그아웃 중…' : '로그아웃'}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(null)
+                setShowCreate((prev) => !prev)
+              }}
+              className="text-xs px-3 py-1 rounded bg-[var(--blue)] text-white"
+            >
+              {showCreate ? '추가 폼 닫기' : '새 Admin User 추가'}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogoutClick}
+              disabled={logoutLoading}
+              className="text-xs px-3 py-1 rounded border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface2)] disabled:opacity-60"
+            >
+              {logoutLoading ? '로그아웃 중…' : '로그아웃'}
+            </button>
           </div>
         </nav>
 
@@ -96,35 +125,25 @@ export default function AdminUsersPage() {
           Admin User 관리
         </h1>
 
-        {!isAuthenticated && !loading && (
-          <AdminLoginForm
-            loading={loginLoading}
-            error={loginError}
-            onSubmit={login}
-          />
-        )}
+        <AdminUserList
+          users={users}
+          loading={loading}
+          error={error}
+          onEdit={(user) => {
+            setShowCreate(false)
+            setEditing(user)
+          }}
+          onDelete={handleDeleteUser}
+        />
 
-        {isAuthenticated && (
-          <AdminUserList
-            users={users}
-            loading={loading}
-            error={error}
-            onEdit={(user) => {
-              setShowCreate(false)
-              setEditing(user)
-            }}
-            onDelete={handleDeleteUser}
-          />
-        )}
-
-        {isAuthenticated && showCreate && (
+        {showCreate && (
           <CreateAdminUserForm
             onCreated={handleCreated}
             onClose={() => setShowCreate(false)}
           />
         )}
 
-        {isAuthenticated && editing && (
+        {editing && (
           <EditAdminUserForm
             user={editing}
             onUpdated={handleUpdated}
@@ -132,7 +151,7 @@ export default function AdminUsersPage() {
           />
         )}
 
-        {isAuthenticated && !loading && !error && users.length > 0 && (
+        {!loading && !error && users.length > 0 && (
           <div className="mt-4 text-[var(--dim)] text-xs">
             행의 삭제 버튼을 누르면 확인 후 즉시 삭제됩니다.
           </div>

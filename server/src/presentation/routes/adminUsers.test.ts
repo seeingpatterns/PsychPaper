@@ -5,7 +5,7 @@ import { createApp } from '../../app.js'
 import { AdminUserService } from '../../application/admin-user/AdminUserService.js'
 import { InMemoryAdminUserRepository } from '../../application/admin-user/InMemoryAdminUserRepository.js'
 
-type QueryResult = { rowCount: number; rows: Array<{ id: number; password_hash: string }> }
+type QueryResult = { rowCount: number; rows: Array<{ id: number; password_hash: string; username?: string }> }
 
 class FakePool {
   private adminUser = {
@@ -16,7 +16,17 @@ class FakePool {
 
   async query(sql: string, values: unknown[]): Promise<QueryResult> {
     const isLoginQuery = sql.includes('FROM admin_users WHERE username = $1 LIMIT 1')
+    const isMeQuery = sql.includes('FROM admin_users WHERE id = $1 LIMIT 1')
     if (!isLoginQuery) {
+      if (isMeQuery) {
+        const [id] = values
+        if (id === this.adminUser.id) {
+          return {
+            rowCount: 1,
+            rows: [{ id: this.adminUser.id, password_hash: this.adminUser.password_hash, username: this.adminUser.username }],
+          }
+        }
+      }
       return { rowCount: 0, rows: [] }
     }
     const [username] = values
@@ -29,6 +39,28 @@ class FakePool {
     return { rowCount: 0, rows: [] }
   }
 }
+
+describe('GET /api/admin/me', () => {
+  it('returns 401 without session', async () => {
+    const app = createTestApp()
+    const res = await request(app).get('/api/admin/me')
+    expect(res.status).toBe(401)
+  })
+
+  it('returns current admin after login', async () => {
+    const app = createTestApp()
+    const agent = request.agent(app)
+    await loginAsAdmin(agent)
+    const res = await agent.get('/api/admin/me')
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      user: {
+        id: 1,
+        username: 'admin',
+      },
+    })
+  })
+})
 
 function createTestApp() {
   process.env.SESSION_SECRET = 'test-session-secret'
