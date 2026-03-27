@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 import type { AppDeps } from '../../app.js'
 import bcrypt from 'bcryptjs'
+import { requireAdminSession } from '../../middleware/requireAdminSession.js'
 
 const USERNAME_MIN = 3
 const USERNAME_MAX = 50
@@ -61,6 +62,8 @@ function validateUpdateBody(body: unknown): { username?: string; password?: stri
 export function createAdminUsersRouter(deps: AppDeps): Router {
   const router = Router()
   const { adminUserService, pool } = deps
+
+  router.use('/users', requireAdminSession)
 
   router.get('/users', async (_req: Request, res: Response) => {
     try {
@@ -148,14 +151,31 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
           [username]
         )
         if (result.rowCount === 0) return res.status(401).json({ ok: false })
-        const { password_hash } = result.rows[0]
+        const { id, password_hash } = result.rows[0] as { id: number; password_hash: string }
         const ok = await bcrypt.compare(password, password_hash)
         if (!ok) return res.status(401).json({ ok: false })
+        req.session.adminUserId = id
         return res.json({ ok: true })
       } catch (err) {
         console.error('admin login error:', err)
         return res.status(500).json({ ok: false })
       }
+    })
+
+    router.post('/logout', requireAdminSession, (req: Request, res: Response) => {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('admin logout error:', err)
+          return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Failed to logout' })
+        }
+        res.clearCookie('pp_session', {
+          httpOnly: true,
+          path: '/',
+          sameSite: 'lax',
+          secure: process.env.NODE_ENV === 'production',
+        })
+        return res.status(204).send()
+      })
     })
   }
 
