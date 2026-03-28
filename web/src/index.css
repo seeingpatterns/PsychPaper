@@ -98,3 +98,200 @@ body {
   color: var(--blue);
   margin-bottom: 0.75rem;
 }
+
+/* Admin login page: rotating border + neumorphism inputs */
+.admin-login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-login-wrap {
+  width: 100%;
+}
+
+.admin-login-rotator {
+  position: relative;
+  border-radius: 28px;
+  padding: 2px;
+  overflow: hidden;
+  max-width: 380px;
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+.admin-login-rotator::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    var(--blue) 55deg,
+    var(--purple) 120deg,
+    var(--cyan) 185deg,
+    var(--accent) 250deg,
+    transparent 320deg
+  );
+  animation: admin-border-spin 5s linear infinite;
+  z-index: -1;
+}
+
+.admin-login-card {
+  background: linear-gradient(160deg, #12131d, #0e111a);
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 34px 26px 24px;
+  text-align: center;
+  box-shadow:
+    18px 18px 34px rgba(0, 0, 0, 0.35),
+    -10px -10px 24px rgba(255, 255, 255, 0.03);
+}
+
+.admin-avatar {
+  width: 78px;
+  height: 78px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  background: #131824;
+  box-shadow:
+    inset 8px 8px 16px rgba(0, 0, 0, 0.45),
+    inset -8px -8px 16px rgba(255, 255, 255, 0.04);
+}
+
+.admin-login-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.admin-login-subtitle {
+  font-size: 0.85rem;
+  color: var(--dim);
+  margin: 0 0 18px;
+}
+
+.admin-login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-input-wrap {
+  position: relative;
+  display: block;
+}
+
+.admin-input-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.admin-neumorph-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  color: var(--text);
+  padding: 12px 14px 12px 42px;
+  background: #0e1320;
+  box-shadow:
+    inset 7px 7px 12px rgba(0, 0, 0, 0.45),
+    inset -7px -7px 12px rgba(255, 255, 255, 0.03);
+}
+
+.admin-neumorph-input::placeholder {
+  color: color-mix(in srgb, var(--dim) 82%, transparent);
+}
+
+.admin-neumorph-input:focus {
+  box-shadow:
+    inset 7px 7px 12px rgba(0, 0, 0, 0.5),
+    inset -7px -7px 12px rgba(255, 255, 255, 0.04),
+    0 0 0 1px color-mix(in srgb, var(--blue) 45%, transparent);
+}
+
+.admin-login-btn {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 11px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(120deg, var(--blue), color-mix(in srgb, var(--blue) 62%, var(--purple)));
+  box-shadow:
+    10px 10px 20px rgba(0, 0, 0, 0.35),
+    -8px -8px 18px rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.admin-login-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.admin-login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-login-info {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px;
+  font-size: 0.86rem;
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.admin-login-error {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  border-radius: 14px;
+  padding: 9px 10px;
+  font-size: 0.82rem;
+  color: #ffb2b2;
+  background: rgba(255, 61, 61, 0.09);
+}
+
+.admin-login-options {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.admin-option-link {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.admin-option-link:hover {
+  text-decoration: underline;
+}
+
+.admin-option-disabled {
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--dim) 70%, transparent);
+  font-size: 0.8rem;
+  cursor: not-allowed;
+  padding: 0;
+}
+
+@keyframes admin-border-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
