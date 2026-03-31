@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { AdminUserList } from '../features/admin-user-crud/ui/AdminUserList'
-import { CreateAdminUserForm } from '../features/admin-user-crud/ui/CreateAdminUserForm'
-import { EditAdminUserForm } from '../features/admin-user-crud/ui/EditAdminUserForm'
-import { deleteAdminUser, getAdminUsers } from '../shared/api/admin-user'
+import { useNavigate } from 'react-router-dom'
+import { getAdminUsers } from '../shared/api/admin-user'
 import { getAdminMe, logoutAdmin } from '../shared/api/admin-auth'
 import type { AdminUser } from '../entities/admin-user/model/types'
 import type { ApiError } from '../shared/api/client'
+import AdminShell from '../features/admin-layout/ui/AdminShell'
 
 export default function AdminUsersPage() {
   const navigate = useNavigate()
@@ -14,8 +12,6 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [logoutLoading, setLogoutLoading] = useState(false)
-  const [showCreate, setShowCreate] = useState(false)
-  const [editing, setEditing] = useState<AdminUser | null>(null)
 
   useEffect(() => {
     let active = true
@@ -34,6 +30,10 @@ export default function AdminUsersPage() {
           navigate('/admin/login', { replace: true })
           return
         }
+        if (apiErr.status === 403) {
+          if (active) setError('Access denied')
+          return
+        }
         if (active) setError(apiErr.message)
       } finally {
         if (active) setLoading(false)
@@ -45,32 +45,6 @@ export default function AdminUsersPage() {
       active = false
     }
   }, [navigate])
-
-  function handleCreated(user: AdminUser) {
-    setUsers((prev) => [...prev, user].sort((a, b) => a.id - b.id))
-  }
-
-  function handleUpdated(user: AdminUser) {
-    setUsers((prev) => prev.map((item) => (item.id === user.id ? user : item)))
-  }
-
-  async function handleDeleteUser(user: AdminUser) {
-    const confirmed = window.confirm('정말 이 Admin User를 삭제할까요?')
-    if (!confirmed) return
-    setEditing(null)
-    setError(null)
-    try {
-      await deleteAdminUser(user.id)
-      setUsers((prev) => prev.filter((item) => item.id !== user.id))
-    } catch (err) {
-      const apiErr = err as ApiError
-      if (apiErr.status === 401) {
-        navigate('/admin/login', { replace: true })
-        return
-      }
-      setError(apiErr.message)
-    }
-  }
 
   async function handleLogoutClick() {
     setLogoutLoading(true)
@@ -85,78 +59,46 @@ export default function AdminUsersPage() {
         return
       }
     }
+    window.localStorage.removeItem('pp_admin_username')
     setLogoutLoading(false)
     navigate('/admin/login', { replace: true })
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
-      <div className="max-w-3xl mx-auto">
-        <nav className="mb-8 flex items-center justify-between">
-          <Link
-            to="/"
-            className="text-[var(--blue)] hover:underline text-sm"
-          >
-            ← PsychPaper 홈
-          </Link>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setEditing(null)
-                setShowCreate((prev) => !prev)
-              }}
-              className="text-xs px-3 py-1 rounded bg-[var(--blue)] text-white"
-            >
-              {showCreate ? '추가 폼 닫기' : '새 Admin User 추가'}
-            </button>
-            <button
-              type="button"
-              onClick={handleLogoutClick}
-              disabled={logoutLoading}
-              className="text-xs px-3 py-1 rounded border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface2)] disabled:opacity-60"
-            >
-              {logoutLoading ? '로그아웃 중…' : '로그아웃'}
-            </button>
-          </div>
-        </nav>
-
-        <h1 className="text-xl font-bold text-[var(--text)] mb-4">
-          Admin User 관리
-        </h1>
-
-        <AdminUserList
-          users={users}
-          loading={loading}
-          error={error}
-          onEdit={(user) => {
-            setShowCreate(false)
-            setEditing(user)
-          }}
-          onDelete={handleDeleteUser}
-        />
-
-        {showCreate && (
-          <CreateAdminUserForm
-            onCreated={handleCreated}
-            onClose={() => setShowCreate(false)}
-          />
-        )}
-
-        {editing && (
-          <EditAdminUserForm
-            user={editing}
-            onUpdated={handleUpdated}
-            onCancel={() => setEditing(null)}
-          />
-        )}
-
+    <AdminShell
+      section="users"
+      title="Admin Users"
+      subtitle="Manage administrator accounts"
+      onLogout={handleLogoutClick}
+      logoutDisabled={logoutLoading}
+      actions={<button type="button" className="admin-primary-btn">Add Admin User</button>}
+    >
+      <section className="admin-panel">
+        <h3 style={{ marginTop: 0 }}>Admin user list</h3>
+        {loading && <p>Loading admin users...</p>}
+        {!loading && error && <p>{error}</p>}
+        {!loading && !error && users.length === 0 && <p>No admin users found.</p>}
         {!loading && !error && users.length > 0 && (
-          <div className="mt-4 text-[var(--dim)] text-xs">
-            행의 삭제 버튼을 누르면 확인 후 즉시 삭제됩니다.
-          </div>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '8px 0' }}>ID</th>
+                <th style={{ padding: '8px 0' }}>Username</th>
+                <th style={{ padding: '8px 0' }}>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td style={{ padding: '8px 0' }}>{user.id}</td>
+                  <td style={{ padding: '8px 0' }}>{user.username}</td>
+                  <td style={{ padding: '8px 0' }}>{new Date(user.created_at).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
-      </div>
-    </div>
+      </section>
+    </AdminShell>
   )
 }

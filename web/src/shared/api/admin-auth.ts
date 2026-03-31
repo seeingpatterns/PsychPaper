@@ -10,10 +10,7 @@ export type AdminLoginResponse = {
 }
 
 export type AdminMeResponse = {
-  user: {
-    id: number
-    username: string
-  }
+  admin: true
 }
 
 export async function getAdminMe(): Promise<AdminMeResponse> {

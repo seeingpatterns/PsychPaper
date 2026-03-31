@@ -12,31 +12,8 @@ const cookieOpts = () => ({
 export function createAdminAuthHandlers(deps: AppDeps) {
   const { pool } = deps
 
-  async function me(req: Request, res: Response) {
-    if (!pool) {
-      return res.status(503).json({ code: 'SERVICE_UNAVAILABLE', message: 'Admin auth unavailable' })
-    }
-
-    const adminUserId = req.session.adminUserId
-    if (typeof adminUserId !== 'number') {
-      return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' })
-    }
-
-    try {
-      const result = await pool.query(
-        `SELECT id, username FROM admin_users WHERE id = $1 LIMIT 1`,
-        [adminUserId]
-      )
-      if (result.rowCount === 0) {
-        req.session.destroy(() => {})
-        return res.status(401).json({ code: 'UNAUTHORIZED', message: 'Authentication required' })
-      }
-      const user = result.rows[0] as { id: number; username: string }
-      return res.json({ user })
-    } catch (err) {
-      console.error('admin me error:', err)
-      return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Failed to resolve current admin' })
-    }
+  async function me(_req: Request, res: Response) {
+    return res.json({ admin: true })
   }
 
   async function login(req: Request, res: Response) {

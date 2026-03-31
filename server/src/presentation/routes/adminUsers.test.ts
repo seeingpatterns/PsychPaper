@@ -40,6 +40,24 @@ class FakePool {
   }
 }
 
+class FakePoolWithNonAdminSession extends FakePool {
+  override async query(sql: string, values: unknown[]): Promise<QueryResult> {
+    const isLoginQuery = sql.includes('FROM admin_users WHERE username = $1 LIMIT 1')
+    if (!isLoginQuery) {
+      return super.query(sql, values)
+    }
+
+    const [username] = values
+    if (username === 'nonadmin') {
+      return {
+        rowCount: 1,
+        rows: [{ id: '1' as unknown as number, password_hash: bcrypt.hashSync('password123', 10) }],
+      }
+    }
+    return super.query(sql, values)
+  }
+}
+
 describe('GET /api/admin/me', () => {
   it('returns 401 without session', async () => {
     const app = createTestApp()
@@ -53,12 +71,19 @@ describe('GET /api/admin/me', () => {
     await loginAsAdmin(agent)
     const res = await agent.get('/api/admin/me')
     expect(res.status).toBe(200)
-    expect(res.body).toMatchObject({
-      user: {
-        id: 1,
-        username: 'admin',
-      },
+    expect(res.body).toMatchObject({ admin: true })
+  })
+
+  it('returns 403 when session exists but not admin', async () => {
+    const app = createTestAppWithNonAdminSession()
+    const agent = request.agent(app)
+    const loginRes = await agent.post('/api/admin/login').send({
+      username: 'nonadmin',
+      password: 'password123',
     })
+    expect(loginRes.status).toBe(200)
+    const meRes = await agent.get('/api/admin/me')
+    expect(meRes.status).toBe(403)
   })
 })
 
@@ -67,6 +92,14 @@ function createTestApp() {
   const repo = new InMemoryAdminUserRepository()
   const service = new AdminUserService(repo)
   const pool = new FakePool()
+  return createApp({ adminUserService: service, pool: pool as never })
+}
+
+function createTestAppWithNonAdminSession() {
+  process.env.SESSION_SECRET = 'test-session-secret'
+  const repo = new InMemoryAdminUserRepository()
+  const service = new AdminUserService(repo)
+  const pool = new FakePoolWithNonAdminSession()
   return createApp({ adminUserService: service, pool: pool as never })
 }
 
@@ -93,6 +126,19 @@ describe('GET /api/admin/users', () => {
     expect(res.status).toBe(200)
     expect(res.body).toHaveProperty('users')
     expect(Array.isArray(res.body.users)).toBe(true)
+  })
+
+  it('returns 403 when session exists but not admin', async () => {
+    const app = createTestAppWithNonAdminSession()
+    const agent = request.agent(app)
+    const loginRes = await agent.post('/api/admin/login').send({
+      username: 'nonadmin',
+      password: 'password123',
+    })
+    expect(loginRes.status).toBe(200)
+
+    const usersRes = await agent.get('/api/admin/users')
+    expect(usersRes.status).toBe(403)
   })
 })
 

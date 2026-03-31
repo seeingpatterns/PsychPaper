@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getAdminMe, loginAdmin, type AdminLoginInput } from '../shared/api/admin-auth'
 import type { ApiError } from '../shared/api/client'
 
 export default function AdminLoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [checking, setChecking] = useState(true)
   const [form, setForm] = useState<AdminLoginInput>({ username: '', password: '' })
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
+
+  const nextFromQuery = new URLSearchParams(location.search).get('next')
+  const nextPath = typeof nextFromQuery === 'string' && nextFromQuery.startsWith('/admin')
+    ? nextFromQuery
+    : '/admin'
 
   useEffect(() => {
     let active = true
@@ -17,7 +23,7 @@ export default function AdminLoginPage() {
     async function checkSession() {
       try {
         await getAdminMe()
-        if (active) navigate('/admin/users', { replace: true })
+        if (active) navigate(nextPath, { replace: true })
       } catch (err) {
         const apiErr = err as ApiError
         if (apiErr.status !== 401 && active) {
@@ -32,14 +38,15 @@ export default function AdminLoginPage() {
     return () => {
       active = false
     }
-  }, [navigate])
+  }, [navigate, nextPath])
 
   async function handleLogin(input: AdminLoginInput) {
     setLoginError(null)
     setLoginLoading(true)
     try {
       await loginAdmin(input)
-      navigate('/admin/users', { replace: true })
+      window.localStorage.setItem('pp_admin_username', input.username.trim())
+      navigate(nextPath, { replace: true })
     } catch (err) {
       const apiErr = err as ApiError
       if (apiErr.status === 401) {
@@ -122,25 +129,7 @@ export default function AdminLoginPage() {
                   {loginLoading ? '로그인 중…' : 'Login'}
                 </button>
 
-                <div className="admin-login-options">
-                  <button
-                    type="button"
-                    disabled
-                    className="admin-option-disabled"
-                    title="아직 준비 중인 기능입니다."
-                  >
-                    Forgot password
-                  </button>
-                  <span aria-hidden="true">or</span>
-                  <button
-                    type="button"
-                    disabled
-                    className="admin-option-disabled"
-                    title="Admin 회원가입은 내부에서만 생성합니다."
-                  >
-                    Sign Up
-                  </button>
-                </div>
+                <p className="text-xs text-[var(--dim)]">관리자 계정으로 로그인하세요.</p>
               </form>
             )}
           </div>

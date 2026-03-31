@@ -17,12 +17,13 @@ export function createAdminApiRouter(deps: AppDeps): Router {
   router.use(adminAuditMiddleware())
 
   const { me, login, logout } = createAdminAuthHandlers(deps)
-  router.get('/me', requireAdminSession, me)
   router.post('/login', login)
-  router.post('/logout', requireAdminSession, logout)
+  router.use(requireAdminSession)
 
+  router.get('/me', me)
+  router.post('/logout', logout)
   const usersCrud = createAdminUsersCrudRouter(deps)
-  router.use('/users', requireAdminSession, usersCrud)
+  router.use('/users', usersCrud)
 
   return router
 }
