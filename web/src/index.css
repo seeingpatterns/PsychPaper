@@ -173,6 +173,12 @@ body {
   align-items: center;
   justify-content: center;
   line-height: 0;
+  border-radius: 10px;
+}
+
+.pp-cube-logo:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 85%, transparent);
+  outline-offset: 4px;
 }
 
 .pp-cube-logo__vh {
@@ -188,8 +194,8 @@ body {
 }
 
 .pp-cube-logo__stage {
-  width: 152px;
-  height: 44px;
+  width: 59px;
+  height: 17px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -199,12 +205,12 @@ body {
 
 .pp-cube-logo__inner {
   position: relative;
-  top: -8px;
+  top: -3px;
   display: block;
-  width: 280px;
-  height: 200px;
+  width: 107px;
+  height: 77px;
   margin: 0 auto;
-  transform: skewY(-20deg) scale(0.3);
+  transform: skewY(-20deg) scale(0.11506875);
   transform-origin: center center;
   animation: pp-cube-logo-hue 6s linear infinite;
 }
@@ -247,7 +253,7 @@ body {
   width: 50px;
   height: 50px;
   background: color-mix(in srgb, var(--text) 78%, transparent);
-  z-index: calc(1 * var(--i));
+  z-index: var(--i);
   transition: 1.5s;
 }
 
@@ -908,13 +914,25 @@ body {
 }
 
 /* /articles — 매거진형 목록 (CodePen 레이아웃 계승, 다크 테마) */
+.magazine-shell {
+  width: 95%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+}
+
 .magazine-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  padding: 2.5rem 1.5rem 2rem;
+  padding: 3rem 0 1.25rem;
   border-bottom: 1px solid var(--border);
+}
+
+.magazine-header-brand {
+  flex-shrink: 0;
 }
 
 .magazine-header-logo {
@@ -926,8 +944,41 @@ body {
   line-height: 1;
 }
 
-.magazine-header-logo:hover {
+.magazine-header-logo.pp-cube-logo {
+  font-size: 0;
+  letter-spacing: 0;
+  padding: 2px 0 10px;
+  border-radius: 10px;
+  margin-top: 0;
+  /* 레이아웃 박스는 그대로 두고 큐브 도형만 아래로 (기본 inner top: -3px 보정) */
+  transform: translateY(10px);
+}
+
+.magazine-header-logo.pp-cube-logo .pp-cube-logo__inner {
+  top: 2px;
+}
+
+.magazine-header-logo.pp-cube-logo:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--blue) 85%, transparent);
+  outline-offset: 4px;
+}
+
+.magazine-header-logo.pp-cube-logo:hover {
+  opacity: 0.92;
+}
+
+.magazine-header-logo:hover:not(.pp-cube-logo) {
   color: color-mix(in srgb, var(--blue) 85%, white);
+}
+
+@media (min-width: 1280px) {
+  .magazine-header-brand {
+    margin-left: 1.5rem;
+  }
+
+  .magazine-header-nav {
+    margin-right: 1.5rem;
+  }
 }
 
 .magazine-header-tagline {
@@ -936,6 +987,8 @@ body {
   color: var(--dim);
   text-align: center;
   flex: 1;
+  align-self: center;
+  margin: 0;
 }
 
 @media (min-width: 1024px) {
@@ -968,7 +1021,8 @@ body {
 }
 
 .magazine-page-title {
-  padding: 2rem 1.5rem 0;
+  /* 글자만 위로 0.4cm — 아래 패딩으로 보정해 그리드 시작선은 유지 */
+  padding: calc(2rem - 0.4cm) 0 0.4cm;
   display: flex;
   justify-content: center;
 }
@@ -995,10 +1049,10 @@ body {
 
 .magazine-layout {
   margin-top: 2.5rem;
-  width: 95%;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
   padding-bottom: 4rem;
 }
 
@@ -1006,7 +1060,7 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2.5rem;
-  padding: 0 1.5rem;
+  padding: 0;
 }
 
 @media (min-width: 1280px) {
@@ -1322,10 +1376,10 @@ body {
 
 /* 첫 번째 이후 논문: 열 구분 (데이터가 쌓일 때) */
 .magazine-more-grid {
-  width: 95%;
-  max-width: 1200px;
-  margin: 3rem auto 0;
-  padding: 0 1.5rem;
+  width: 100%;
+  max-width: none;
+  margin: 3rem 0 0;
+  padding: 0;
   display: grid;
   grid-template-columns: 1fr;
   gap: 0;

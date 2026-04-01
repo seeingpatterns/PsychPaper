@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { ArticleListItem } from '@/entities/article/model/articlePublicList'
 import { publicArticles } from '@/entities/article/model/articlePublicList'
 import { AuthorStamp } from '@/shared/ui/AuthorStamp'
+import { PsychPaperCubeLogo } from '@/shared/ui/PsychPaperCubeLogo'
 
 const articles = publicArticles
 
@@ -163,24 +164,26 @@ export default function ArticlesPage() {
     <>
       <div className="noise" aria-hidden="true" />
 
-      <header className="magazine-header">
-        <div className="shrink-0">
-          <Link to="/" className="magazine-header-logo">
-            PsychPaper
-          </Link>
-        </div>
-        <p className="magazine-header-tagline">심리학 논문 해설 &amp; 지식 탐색</p>
-        <nav className="magazine-header-nav" aria-label="아티클 페이지">
-          <Link to="/" className="magazine-header-link">
-            Home
-          </Link>
-          <Link to="/articles" className="magazine-header-link" aria-current="page">
-            Articles
-          </Link>
-        </nav>
-      </header>
+      <div className="magazine-shell">
+        <header className="magazine-header">
+          <div className="magazine-header-brand">
+            <Link to="/" className="magazine-header-logo pp-cube-logo" title="PsychPaper">
+              <span className="pp-cube-logo__vh">PsychPaper</span>
+              <PsychPaperCubeLogo />
+            </Link>
+          </div>
+          <p className="magazine-header-tagline">심리학 논문 해설 &amp; 지식 탐색</p>
+          <nav className="magazine-header-nav" aria-label="아티클 페이지">
+            <Link to="/" className="magazine-header-link">
+              Home
+            </Link>
+            <Link to="/articles" className="magazine-header-link" aria-current="page">
+              Articles
+            </Link>
+          </nav>
+        </header>
 
-      <main className="magazine-layout">
+        <main className="magazine-layout">
         <div className="magazine-page-title">
           <h1>최신 논문 해설</h1>
         </div>
@@ -251,7 +254,8 @@ export default function ArticlesPage() {
             ))}
           </div>
         ) : null}
-      </main>
+        </main>
+      </div>
     </>
   )
 }
