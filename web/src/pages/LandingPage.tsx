@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { CSSProperties } from 'react'
+import { StarfieldTerrainBackground } from '@/shared/ui/StarfieldTerrainBackground'
+import { PsychPaperCubeLogo } from '@/shared/ui/PsychPaperCubeLogo'
 
 export default function LandingPage() {
   const location = useLocation()
@@ -11,16 +13,9 @@ export default function LandingPage() {
     left: 0,
     width: 0,
   })
-  const avatarEmoji = useMemo(() => {
-    const username = window.localStorage.getItem('pp_admin_username')?.trim()
-    if (!username) return '👤'
-    return '🧑'
-  }, [])
-
   const navItems = [
     { to: '/', label: 'Home', title: 'Home' },
     { to: '/articles', label: 'Article', title: 'Article' },
-    { to: '/admin/login', label: 'Login', title: 'Login' },
   ]
 
   const activeIndex = useMemo(() => {
@@ -52,14 +47,16 @@ export default function LandingPage() {
 
   return (
     <>
+      <StarfieldTerrainBackground />
       <div className="noise" aria-hidden="true" />
 
-      <div className="relative min-h-screen overflow-hidden">
-        <div className="hero-blob" aria-hidden="true" />
-
+      <div className="relative z-10 min-h-screen">
         <nav className="navbar navbar-expand-custom navbar-mainbg">
           <div className="landing-navbar-wrap">
-            <Link to="/" className="navbar-logo landing-logo-text">PsychPaper</Link>
+            <Link to="/" className="navbar-logo pp-cube-logo" title="PsychPaper">
+              <span className="pp-cube-logo__vh">PsychPaper</span>
+              <PsychPaperCubeLogo />
+            </Link>
             <div className="navbar-collapse">
               <ul className="navbar-nav ml-auto" onMouseLeave={() => setHoveredIndex(null)}>
                 <div className="hori-selector" style={selectorStyle} />
@@ -81,7 +78,14 @@ export default function LandingPage() {
               </ul>
               <div className="landing-nav-actions">
                 <Link to="/admin" className="landing-action-btn" aria-label="Settings" title="Settings">⚙️</Link>
-                <Link to="/admin" className="landing-avatar" aria-label="Avatar" title="Avatar">{avatarEmoji}</Link>
+                <Link
+                  to="/admin/login"
+                  className={`landing-nav-login${location.pathname === '/admin/login' ? ' landing-nav-login--active' : ''}`}
+                  aria-label="Login"
+                  title="Login"
+                >
+                  Login
+                </Link>
               </div>
             </div>
           </div>
@@ -92,13 +96,13 @@ export default function LandingPage() {
             to="/"
             className="text-inherit no-underline hover:opacity-90 transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] rounded"
           >
-            <h1 className="font-black text-[clamp(2rem,5.5vw,3.5rem)] leading-tight">
+            <h1 className="font-black text-[clamp(2rem,5.5vw,3.5rem)] leading-tight [text-shadow:0_2px_28px_rgba(0,0,0,0.75)]">
               <span className="text-[var(--blue)]">PsychPaper</span>
               <br />
               심리학 논문 해설 &<br />
               지식 탐색 플랫폼
             </h1>
-            <p className="mt-5 text-base text-[var(--dim)] max-w-[620px]">
+            <p className="mt-5 text-base text-[var(--dim)] max-w-[620px] [text-shadow:0_1px_18px_rgba(0,0,0,0.65)]">
               심리학 대학원생이 학술 논문을 읽고, 핵심을 시각적으로 매력적인 글로 해설하여
               일반 대중과 공유하는 논문 해설 블로그 + 지식 탐색 플랫폼
             </p>

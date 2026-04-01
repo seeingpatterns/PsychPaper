@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { getAdminMe, loginAdmin, type AdminLoginInput } from '../shared/api/admin-auth'
+import { getAdminMe, loginAdmin, logoutAdmin, type AdminLoginInput } from '../shared/api/admin-auth'
 import type { ApiError } from '../shared/api/client'
 
 export default function AdminLoginPage() {
@@ -11,6 +11,7 @@ export default function AdminLoginPage() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState<string | null>(null)
   const [pageError, setPageError] = useState<string | null>(null)
+  const [alreadyLoggedIn, setAlreadyLoggedIn] = useState(false)
 
   const nextFromQuery = new URLSearchParams(location.search).get('next')
   const nextPath = typeof nextFromQuery === 'string' && nextFromQuery.startsWith('/admin')
@@ -23,10 +24,12 @@ export default function AdminLoginPage() {
     async function checkSession() {
       try {
         await getAdminMe()
-        if (active) navigate(nextPath, { replace: true })
+        if (active) setAlreadyLoggedIn(true)
       } catch (err) {
         const apiErr = err as ApiError
-        if (apiErr.status !== 401 && active) {
+        if (apiErr.status === 401) {
+          if (active) setAlreadyLoggedIn(false)
+        } else if (active) {
           setPageError(apiErr.message)
         }
       } finally {
@@ -64,6 +67,16 @@ export default function AdminLoginPage() {
     await handleLogin(form)
   }
 
+  async function handleLogout() {
+    try {
+      await logoutAdmin()
+      window.localStorage.removeItem('pp_admin_username')
+      setAlreadyLoggedIn(false)
+    } catch {
+      setAlreadyLoggedIn(false)
+    }
+  }
+
   return (
     <div className="admin-login-page min-h-screen bg-[var(--bg)] text-[var(--text)] p-6">
       <div className="admin-login-wrap max-w-xl mx-auto">
@@ -88,6 +101,23 @@ export default function AdminLoginPage() {
 
             {!checking && pageError && (
               <div className="admin-login-error">{pageError}</div>
+            )}
+
+            {!checking && !pageError && alreadyLoggedIn && (
+              <div className="admin-login-info mb-4 text-left">
+                이미 로그인되어 있습니다.{' '}
+                <Link to={nextPath} className="font-semibold text-[var(--blue)] underline">
+                  관리 화면으로 이동
+                </Link>
+                {' · '}
+                <button
+                  type="button"
+                  className="text-[var(--dim)] underline hover:text-[var(--text)]"
+                  onClick={() => void handleLogout()}
+                >
+                  로그아웃
+                </button>
+              </div>
             )}
 
             {!checking && !pageError && (
