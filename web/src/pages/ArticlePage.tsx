@@ -1,10 +1,13 @@
 import { Link, useParams } from 'react-router-dom'
+import { getPublicArticleBySlug } from '@/entities/article/model/articlePublicList'
+import { AuthorStamp } from '@/shared/ui/AuthorStamp'
 
 const DEEP_DIVE_ARTICLE = 'sleep-mortality-130man'
 
 export default function ArticlePage() {
   const { slug } = useParams<{ slug: string }>()
   const isDeepDive = slug === DEEP_DIVE_ARTICLE
+  const meta = slug ? getPublicArticleBySlug(slug) : undefined
 
   return (
     <>
@@ -19,6 +22,14 @@ export default function ArticlePage() {
         >
           ← PsychPaper
         </Link>
+
+        <div className="mb-8">
+          <AuthorStamp
+            name={meta?.author.name ?? 'Jung Kim'}
+            role={meta?.author.role ?? 'Psykid'}
+            photoUrl={meta?.authorPhotoUrl}
+          />
+        </div>
 
         {isDeepDive ? (
           <iframe
