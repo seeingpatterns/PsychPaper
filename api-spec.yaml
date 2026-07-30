@@ -7,6 +7,70 @@ servers:
     description: Local API base path
 
 paths:
+  /admin/login:
+    post:
+      tags:
+        - Admin Auth
+      summary: Login admin with session cookie
+      description: Validate admin credentials and create a server-side session (`pp_session` HttpOnly cookie).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminLogin'
+      responses:
+        '200':
+          description: Login success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminLoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminLoginFailure'
+
+  /admin/logout:
+    post:
+      tags:
+        - Admin Auth
+      summary: Logout admin session
+      security:
+        - sessionCookieAuth: []
+      responses:
+        '204':
+          description: Logout success
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/me:
+    get:
+      tags:
+        - Admin Auth
+      summary: Get current authenticated admin
+      security:
+        - sessionCookieAuth: []
+      responses:
+        '200':
+          description: Current authenticated admin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminMeResponse'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /admin/users:
     get:
       tags:
@@ -14,7 +78,7 @@ paths:
       summary: List admin users
       description: Return all admin users. MVP에서는 페이지네이션 없이 전체 목록을 반환한다.
       security:
-        - bearerAuth: []
+        - sessionCookieAuth: []
       responses:
         '200':
           description: List of admin users
@@ -33,6 +97,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /admin/users/{id}:
     get:
@@ -40,7 +110,7 @@ paths:
         - Admin Users
       summary: Get a single admin user
       security:
-        - bearerAuth: []
+        - sessionCookieAuth: []
       parameters:
         - name: id
           in: path
@@ -67,13 +137,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     put:
       tags:
         - Admin Users
       summary: Update an admin user
       security:
-        - bearerAuth: []
+        - sessionCookieAuth: []
       parameters:
         - name: id
           in: path
@@ -118,13 +194,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
     delete:
       tags:
         - Admin Users
       summary: Delete an admin user
       security:
-        - bearerAuth: []
+        - sessionCookieAuth: []
       parameters:
         - name: id
           in: path
@@ -147,6 +229,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /admin/users:
     post:
@@ -154,7 +242,7 @@ paths:
         - Admin Users
       summary: Create a new admin user
       security:
-        - bearerAuth: []
+        - sessionCookieAuth: []
       requestBody:
         required: true
         content:
@@ -191,15 +279,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '401':
+          description: No valid admin session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    sessionCookieAuth:
+      type: apiKey
+      in: cookie
+      name: pp_session
 
   schemas:
+    AdminLogin:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    AdminLoginResponse:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          example: true
+
+    AdminLoginFailure:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
+          example: false
+
+    AdminMeResponse:
+      type: object
+      required:
+        - user
+      properties:
+        user:
+          type: object
+          required:
+            - id
+            - username
+          properties:
+            id:
+              type: integer
+              format: int32
+            username:
+              type: string
+
     AdminUser:
       type: object
       required:

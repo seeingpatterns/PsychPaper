@@ -25,15 +25,15 @@ export function createAdminApiRouter(deps: AppDeps): Router {
     message: { code: 'RATE_LIMIT', message: 'Too many login attempts. Try again later.' },
   })
 
-  const { pool } = deps
-  if (pool) {
-    const { login, logout } = createAdminAuthHandlers(deps)
-    router.post('/login', loginLimiter, login)
-    router.post('/logout', requireAdminSession, logout)
-  }
+  const { me, login, logout } = createAdminAuthHandlers(deps)
+  router.post('/login', loginLimiter, login)
+
+  router.use(requireAdminSession)
+  router.get('/me', me)
+  router.post('/logout', logout)
 
   const usersCrud = createAdminUsersCrudRouter(deps)
-  router.use('/users', requireAdminSession, usersCrud)
+  router.use('/users', usersCrud)
 
   return router
 }

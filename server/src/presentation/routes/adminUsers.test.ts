@@ -5,7 +5,7 @@ import { createApp } from '../../app.js'
 import { AdminUserService } from '../../application/admin-user/AdminUserService.js'
 import { InMemoryAdminUserRepository } from '../../application/admin-user/InMemoryAdminUserRepository.js'
 
-type QueryResult = { rowCount: number; rows: Array<{ id: number; password_hash: string }> }
+type QueryResult = { rowCount: number; rows: Array<{ id: number; password_hash: string; username?: string }> }
 
 class FakePool {
   private adminUser = {
@@ -16,7 +16,17 @@ class FakePool {
 
   async query(sql: string, values: unknown[]): Promise<QueryResult> {
     const isLoginQuery = sql.includes('FROM admin_users WHERE username = $1 LIMIT 1')
+    const isMeQuery = sql.includes('FROM admin_users WHERE id = $1 LIMIT 1')
     if (!isLoginQuery) {
+      if (isMeQuery) {
+        const [id] = values
+        if (id === this.adminUser.id) {
+          return {
+            rowCount: 1,
+            rows: [{ id: this.adminUser.id, password_hash: this.adminUser.password_hash, username: this.adminUser.username }],
+          }
+        }
+      }
       return { rowCount: 0, rows: [] }
     }
     const [username] = values
@@ -30,11 +40,66 @@ class FakePool {
   }
 }
 
+class FakePoolWithNonAdminSession extends FakePool {
+  override async query(sql: string, values: unknown[]): Promise<QueryResult> {
+    const isLoginQuery = sql.includes('FROM admin_users WHERE username = $1 LIMIT 1')
+    if (!isLoginQuery) {
+      return super.query(sql, values)
+    }
+
+    const [username] = values
+    if (username === 'nonadmin') {
+      return {
+        rowCount: 1,
+        rows: [{ id: '1' as unknown as number, password_hash: bcrypt.hashSync('password123', 10) }],
+      }
+    }
+    return super.query(sql, values)
+  }
+}
+
+describe('GET /api/admin/me', () => {
+  it('returns 401 without session', async () => {
+    const app = createTestApp()
+    const res = await request(app).get('/api/admin/me')
+    expect(res.status).toBe(401)
+  })
+
+  it('returns current admin after login', async () => {
+    const app = createTestApp()
+    const agent = request.agent(app)
+    await loginAsAdmin(agent)
+    const res = await agent.get('/api/admin/me')
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ admin: true })
+  })
+
+  it('returns 403 when session exists but not admin', async () => {
+    const app = createTestAppWithNonAdminSession()
+    const agent = request.agent(app)
+    const loginRes = await agent.post('/api/admin/login').send({
+      username: 'nonadmin',
+      password: 'password123',
+    })
+    expect(loginRes.status).toBe(200)
+    const meRes = await agent.get('/api/admin/me')
+    expect(meRes.status).toBe(403)
+  })
+})
+
 function createTestApp() {
   process.env.SESSION_SECRET = 'test-session-secret'
   const repo = new InMemoryAdminUserRepository()
   const service = new AdminUserService(repo)
   const pool = new FakePool()
+  return createApp({ adminUserService: service, pool: pool as never })
+}
+
+function createTestAppWithNonAdminSession() {
+  process.env.SESSION_SECRET = 'test-session-secret'
+  const repo = new InMemoryAdminUserRepository()
+  const service = new AdminUserService(repo)
+  const pool = new FakePoolWithNonAdminSession()
   return createApp({ adminUserService: service, pool: pool as never })
 }
 
@@ -61,6 +126,19 @@ describe('GET /api/admin/users', () => {
     expect(res.status).toBe(200)
     expect(res.body).toHaveProperty('users')
     expect(Array.isArray(res.body.users)).toBe(true)
+  })
+
+  it('returns 403 when session exists but not admin', async () => {
+    const app = createTestAppWithNonAdminSession()
+    const agent = request.agent(app)
+    const loginRes = await agent.post('/api/admin/login').send({
+      username: 'nonadmin',
+      password: 'password123',
+    })
+    expect(loginRes.status).toBe(200)
+
+    const usersRes = await agent.get('/api/admin/users')
+    expect(usersRes.status).toBe(403)
   })
 })
 

@@ -14,6 +14,10 @@ const cookieOpts = () => ({
 export function createAdminAuthHandlers(deps: AppDeps) {
   const { pool } = deps
 
+  async function me(_req: Request, res: Response) {
+    return res.json({ admin: true })
+  }
+
   async function login(req: Request, res: Response) {
     if (!pool) {
       return res.status(503).json({ ok: false, error: 'Admin auth unavailable' })
@@ -61,5 +65,5 @@ export function createAdminAuthHandlers(deps: AppDeps) {
     })
   }
 
-  return { login, logout }
+  return { me, login, logout }
 }
