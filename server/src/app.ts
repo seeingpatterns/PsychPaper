@@ -22,8 +22,9 @@ export function createApp(deps: AppDeps): express.Express {
   const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
   const isProduction = process.env.NODE_ENV === 'production'
 
-  if (process.env.ADMIN_IP_WHITELIST?.trim()) {
-    app.set('trust proxy', true)
+  // Railway/nginx 등 리버스 프록시 뒤에서 X-Forwarded-For를 쓰려면 필요 (rate-limit, IP 화이트리스트)
+  if (isProduction || process.env.ADMIN_IP_WHITELIST?.trim()) {
+    app.set('trust proxy', 1)
   }
 
   app.use(helmet())
