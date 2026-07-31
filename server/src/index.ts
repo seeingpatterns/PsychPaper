@@ -15,6 +15,8 @@ const repo = new PgAdminUserRepository(pool)
 const adminUserService = new AdminUserService(repo)
 const app = createApp({ adminUserService, pool })
 
-app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`Server running at http://0.0.0.0:${PORT}`)
+// '::' = IPv6 + (dual-stack에서) IPv4까지 수신. Railway 사설망은 IPv6 전용이라
+// '0.0.0.0'(IPv4만)으로 열면 web nginx의 사설망 프록시가 연결되지 않는다.
+app.listen(Number(PORT), '::', () => {
+  console.log(`Server running at http://[::]:${PORT}`)
 })
