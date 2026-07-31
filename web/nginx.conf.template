@@ -16,6 +16,8 @@ server {
         proxy_set_header X-Forwarded-Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        # 공개 진입점(Railway 엣지)은 항상 HTTPS다. nginx는 내부적으로 80(http)로 듣기에
+        # $scheme를 쓰면 백엔드가 http로 오인해 secure 세션 쿠키를 발급하지 않는다 → 로그인 후 튕김.
+        proxy_set_header X-Forwarded-Proto https;
     }
 }
