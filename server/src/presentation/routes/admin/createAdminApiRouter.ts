@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import rateLimit from 'express-rate-limit'
 import type { AppDeps } from '../../../app.js'
 import { adminAuditMiddleware } from '../../../middleware/admin/adminAudit.js'
 import { adminIpWhitelistMiddleware } from '../../../middleware/admin/ipWhitelist.js'
@@ -16,12 +17,21 @@ export function createAdminApiRouter(deps: AppDeps): Router {
   router.use(adminIpWhitelistMiddleware())
   router.use(adminAuditMiddleware())
 
-  const { me, login, logout } = createAdminAuthHandlers(deps)
-  router.post('/login', login)
-  router.use(requireAdminSession)
+  const loginLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { code: 'RATE_LIMIT', message: 'Too many login attempts. Try again later.' },
+  })
 
+  const { me, login, logout } = createAdminAuthHandlers(deps)
+  router.post('/login', loginLimiter, login)
+
+  router.use(requireAdminSession)
   router.get('/me', me)
   router.post('/logout', logout)
+
   const usersCrud = createAdminUsersCrudRouter(deps)
   router.use('/users', usersCrud)
 

@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import session from 'express-session'
 import type { Pool } from 'pg'
 import type { AdminUserService } from './application/admin-user/AdminUserService.js'
@@ -21,11 +22,24 @@ export function createApp(deps: AppDeps): express.Express {
   const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
   const isProduction = process.env.NODE_ENV === 'production'
 
-  if (process.env.ADMIN_IP_WHITELIST?.trim()) {
-    app.set('trust proxy', true)
+  // Railway/nginx 등 리버스 프록시 뒤에서 X-Forwarded-For를 쓰려면 필요 (rate-limit, IP 화이트리스트)
+  if (isProduction || process.env.ADMIN_IP_WHITELIST?.trim()) {
+    app.set('trust proxy', 1)
   }
 
-  app.use(cors({ origin: true, credentials: true }))
+  app.use(helmet())
+
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173').split(',')
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+    credentials: true,
+  }))
   app.use(session({
     name: 'pp_session',
     secret: sessionSecret,

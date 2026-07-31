@@ -5,6 +5,16 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.docker
+.env.railway
+!.env.example
+!.env.docker.example
+!server/.env.example
+
+# Local secrets (team handoff credentials — never commit real values)
+secrets/*
+!secrets/.gitkeep
+!secrets/*.example.md
 
 # Build / output
 dist/

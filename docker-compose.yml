@@ -4,11 +4,7 @@ services:
     build: ./server
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - SESSION_SECRET=change-me-in-docker
-      - DATABASE_URL=${DATABASE_URL}
+    env_file: .env.docker
     depends_on:
       db:
         condition: service_healthy
@@ -16,18 +12,14 @@ services:
 
   db:
     image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+    env_file: .env.docker
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db-schema/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
     ports:
       - "5432:5432"
     healthcheck:
-      # 명시적으로 POSTGRES_DB를 확인해야 "db user명 == DB명" 가정 오류를 피할 수 있다.
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
