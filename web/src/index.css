@@ -294,6 +294,134 @@ body {
   transition: 1.5s;
 }
 
+/* ─── PsychPaper P Animation ───────────────────────────────────────── */
+
+.pp-p-anim {
+  display: inline-flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.pp-p-anim__inner {
+  position: relative;
+  /* 3열 × 5행: 셀 50px + 좌면 40px + 간격 */
+  width: 240px;
+  height: 460px;
+  transform: skewY(-20deg) scale(0.28);
+  transform-origin: top left;
+  overflow: visible;
+}
+
+.pp-p-anim__row {
+  position: absolute;
+  /* 행 offset: 상단 면(::after 40px) 여유 + 행 간격 80px */
+  top: calc(50px + var(--row) * 80px);
+  left: 50px;
+  width: 190px;
+  height: 50px;
+  transform-origin: center center;
+}
+
+/* 스핀 중: transition 끔 — invisible 구간에서 색 전환을 즉시 반영 */
+.pp-p-anim__row--spin {
+  animation: pp-p-row-spin 0.62s ease-in-out;
+}
+
+.pp-p-anim__row--spin .pp-p-anim__cell {
+  transition: none !important;
+}
+
+.pp-p-anim__row--spin .pp-p-anim__cell::before,
+.pp-p-anim__row--spin .pp-p-anim__cell::after {
+  transition: none !important;
+}
+
+@keyframes pp-p-row-spin {
+  0%   { transform: scaleX(1);    opacity: 1; }
+  36%  { transform: scaleX(0.06); opacity: 0.25; }
+  47%  { transform: scaleX(0);    opacity: 0; }
+  53%  { transform: scaleX(0);    opacity: 0; }
+  64%  { transform: scaleX(0.06); opacity: 0.25; }
+  100% { transform: scaleX(1);    opacity: 1; }
+}
+
+/* ── 셀 공통 ── */
+.pp-p-anim__cell {
+  position: absolute;
+  left: calc(var(--col) * 70px);
+  width: 50px;
+  height: 50px;
+  transition: background 0.4s ease, filter 0.4s ease;
+}
+
+.pp-p-anim__cell::before {
+  content: "";
+  position: absolute;
+  left: -40px;
+  width: 40px;
+  height: 100%;
+  transform-origin: right;
+  transform: skewY(45deg);
+  transition: background 0.4s ease;
+}
+
+.pp-p-anim__cell::after {
+  content: "";
+  position: absolute;
+  top: -40px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  transform-origin: bottom;
+  transform: skewX(45deg);
+  transition: background 0.4s ease;
+}
+
+/* ── idle (회색) ── */
+.pp-p-anim__cell--idle {
+  background: color-mix(in srgb, var(--text) 55%, transparent);
+}
+.pp-p-anim__cell--idle::before {
+  background: color-mix(in srgb, var(--text) 70%, transparent);
+}
+.pp-p-anim__cell--idle::after {
+  background: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+/* ── blue (P 영역) ── */
+.pp-p-anim__cell--blue {
+  background: var(--blue);
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--blue) 80%, transparent));
+  animation: pp-p-cell-pulse 2.2s ease-in-out infinite;
+}
+.pp-p-anim__cell--blue::before {
+  background: color-mix(in srgb, var(--blue) 78%, #000);
+}
+.pp-p-anim__cell--blue::after {
+  background: color-mix(in srgb, var(--blue) 82%, #fff);
+}
+
+@keyframes pp-p-cell-pulse {
+  0%, 100% { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--blue) 72%, transparent)); }
+  50%       { filter: drop-shadow(0 0 28px color-mix(in srgb, var(--blue) 95%, transparent)); }
+}
+
+/* ── dim (P 바깥 영역) ── */
+.pp-p-anim__cell--dim {
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  filter: none;
+  animation: none;
+}
+.pp-p-anim__cell--dim::before {
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.pp-p-anim__cell--dim::after {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+/* ─────────────────────────────────────────────────────────────────── */
+
 .navbar-toggler {
   display: none;
   background: transparent;
