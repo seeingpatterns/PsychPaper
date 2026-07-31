@@ -20,6 +20,8 @@ export default function AdminShell({
   title,
   subtitle,
   actions,
+  onLogout,
+  logoutDisabled,
   children,
 }: AdminShellProps) {
   const sideLinkRefs = useRef<Array<HTMLAnchorElement | null>>([])
@@ -71,6 +73,27 @@ export default function AdminShell({
           <h1><Link to="/" className="admin-shell-logo-link">PsychPaper</Link></h1>
           <p>Management Console</p>
         </div>
+        {onLogout ? (
+          <button
+            type="button"
+            onClick={onLogout}
+            disabled={logoutDisabled}
+            className="admin-shell-logout"
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: '1px solid var(--blue)',
+              background: 'transparent',
+              color: 'var(--blue)',
+              cursor: logoutDisabled ? 'default' : 'pointer',
+              opacity: logoutDisabled ? 0.5 : 1,
+              fontSize: '14px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {logoutDisabled ? '로그아웃 중…' : '로그아웃'}
+          </button>
+        ) : null}
       </header>
 
       <div className="admin-shell-body">
