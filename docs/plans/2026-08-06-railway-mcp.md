@@ -43,6 +43,7 @@
 | 2026-08-06 | DB 이중 계정 | `schema.sql` → `11_db_roles.sql`(앱/어드민 롤) → `seed-admin-lee.sql` 적용. 두 롤 로그인 확인. `secrets/db-access.md` 실값 작성(gitignore 확인) |
 | 2026-08-06 | server/web 배포 | MCP `deploy`(tarball). server 변수: DATABASE_URL(내부), SESSION_SECRET, PORT, NODE_ENV, CORS_ORIGIN. web: API_UPSTREAM + 도메인 `web-production-46478.up.railway.app` |
 | 2026-08-06 | 세션 쿠키 이슈 | 로그인 200인데 Set-Cookie 없음. 원인: Railway TLS 엣지→nginx는 HTTP라 `$scheme=http`, `X-Forwarded-Proto $scheme`이 서버에 http 전달 → secure 쿠키 억제. **nginx가 원본 `X-Forwarded-Proto`를 통과시키도록 수정**, web 재배포 후 스모크 계정으로 Set-Cookie→`/me` 200 확인 |
+| 2026-08-06 | 왜 이전 CLI 배포는 정상이었나 | 이전 배포는 `API_UPSTREAM`이 **서버 공개 URL**(`https://server-xxxx.up.railway.app`)이라 `nginx → Railway 엣지 → server` **두 홉**을 탐. 이때 Railway 엣지가 자체 HTTPS 구간에 대해 `X-Forwarded-Proto: https`를 얹어 서버가 `req.secure=true`로 판단 → 엣지가 버그를 가려줌. 이번엔 **프라이빗 URL**(`server.railway.internal`) 한 홉이라 엣지 개입 없이 nginx의 `http`만 전달돼 버그가 표면화됨. 즉 MCP 탓이 아니라 업스트림 경로 차이이며, nginx 수정으로 프라이빗 경로(선호 아키텍처)가 정상 동작 |
 | 2026-08-06 | 정리 | 스모크 계정 삭제, 디버깅용 server 공개 도메인·Postgres HTTP 도메인 제거 (CLI `railway domain delete`) |
 
 ## Design
