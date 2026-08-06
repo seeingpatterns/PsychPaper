@@ -208,6 +208,34 @@ railway run --service Postgres -- powershell -NoProfile -File .\secrets\apply-sc
 
 ---
 
+## 7. 로그인 200인데 세션 쿠키(Set-Cookie)가 안 나감
+
+**증상**
+
+- `POST /api/admin/login` → `{"ok":true}` 200인데 **Set-Cookie 없음**
+- 이후 쿠키로 `/api/admin/me` 요청해도 401
+
+**원인**
+
+- Express 세션 쿠키가 `secure: true`(production)라 `req.secure`가 true여야 발급됨
+- Railway TLS 엣지 → web nginx는 **HTTP**로 받으므로 nginx `$scheme`은 `http`
+- 기존 nginx `proxy_set_header X-Forwarded-Proto $scheme;`가 이를 그대로 서버에 전달 → 서버가 "보안 요청 아님" 판단 → secure 쿠키 발급 억제 (express-session 디버그 로그: `not secured`)
+
+**해결** — nginx가 원본 `X-Forwarded-Proto`를 통과시키도록 변경
+
+```nginx
+map $http_x_forwarded_proto $proxy_x_forwarded_proto {
+    default $http_x_forwarded_proto;
+    ''      $scheme;
+}
+# /api location 안
+proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+```
+
+검증: 스모크 계정으로 로그인 → `Set-Cookie: pp_session=...; Secure; HttpOnly; SameSite=Lax` → `/me` 200.
+
+---
+
 ## 체크리스트 (배포 후 스모크)
 
 | 확인 | 기대 |
