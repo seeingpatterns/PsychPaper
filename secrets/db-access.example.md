@@ -9,7 +9,7 @@ Copy to `secrets/db-access.md` and fill real values.
 |-------|--------|
 | Host | `<railway-or-host>` |
 | Port | `5432` |
-| Database | `psychpaper` |
+| Database | `psychpaper` (local) / `railway` (Railway default) |
 | User | `psychpaper_admin` |
 | Password | `<from 11_db_roles.sql after local replace>` |
 | SSL | require (Railway) / disable (local Docker) |

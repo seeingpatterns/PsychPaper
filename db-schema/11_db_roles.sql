@@ -26,9 +26,13 @@ CREATE ROLE psychpaper_admin WITH
   NOCREATEROLE
   INHERIT;
 
--- Database connect
-GRANT CONNECT ON DATABASE psychpaper TO psychpaper_app;
-GRANT CONNECT ON DATABASE psychpaper TO psychpaper_admin;
+-- Database connect (로컬 psychpaper / Railway railway 등 current DB 기준)
+DO $$
+BEGIN
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO psychpaper_app', current_database());
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO psychpaper_admin', current_database());
+END
+$$;
 
 -- Schema
 GRANT USAGE ON SCHEMA public TO psychpaper_app;
