@@ -1,11 +1,11 @@
 import { Router, type Request, type Response } from 'express'
-import type { AppDeps } from '../../app.js'
-import bcrypt from 'bcryptjs'
+import type { AppDeps } from '../../../app.js'
 
 const USERNAME_MIN = 3
 const USERNAME_MAX = 50
 const PASSWORD_MIN = 8
 const PASSWORD_MAX = 72
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,72}$/
 
 function parseId(id: string): number | null {
   const n = parseInt(id, 10)
@@ -31,6 +31,9 @@ function validateCreateBody(body: unknown): { username: string; password: string
   if (password.length < PASSWORD_MIN || password.length > PASSWORD_MAX) {
     return { code: 'VALIDATION_ERROR', message: `password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters` }
   }
+  if (!PASSWORD_PATTERN.test(password)) {
+    return { code: 'VALIDATION_ERROR', message: 'password must include uppercase, lowercase, number, and special character' }
+  }
   return { username, password }
 }
 
@@ -53,16 +56,22 @@ function validateUpdateBody(body: unknown): { username?: string; password?: stri
     if (o.password.length < PASSWORD_MIN || o.password.length > PASSWORD_MAX) {
       return { code: 'VALIDATION_ERROR', message: `password must be ${PASSWORD_MIN}-${PASSWORD_MAX} characters` }
     }
+    if (!PASSWORD_PATTERN.test(o.password)) {
+      return { code: 'VALIDATION_ERROR', message: 'password must include uppercase, lowercase, number, and special character' }
+    }
     out.password = o.password
   }
   return out
 }
 
-export function createAdminUsersRouter(deps: AppDeps): Router {
+/**
+ * AdminUser CRUD만 담당. 인증·IP·감사는 상위 createAdminApiRouter에서 적용한다.
+ */
+export function createAdminUsersCrudRouter(deps: AppDeps): Router {
   const router = Router()
-  const { adminUserService, pool } = deps
+  const { adminUserService } = deps
 
-  router.get('/users', async (_req: Request, res: Response) => {
+  router.get('/', async (_req: Request, res: Response) => {
     try {
       const users = await adminUserService.list()
       res.json({ users })
@@ -72,7 +81,7 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
     }
   })
 
-  router.get('/users/:id', async (req: Request, res: Response) => {
+  router.get('/:id', async (req: Request, res: Response) => {
     const id = parseId(req.params.id)
     if (id === null) {
       return errorRes(res, 400, 'VALIDATION_ERROR', 'id must be a positive integer')
@@ -87,7 +96,7 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
     }
   })
 
-  router.post('/users', async (req: Request, res: Response) => {
+  router.post('/', async (req: Request, res: Response) => {
     const validated = validateCreateBody(req.body)
     if ('code' in validated) return errorRes(res, 400, validated.code, validated.message)
     try {
@@ -103,7 +112,7 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
     }
   })
 
-  router.put('/users/:id', async (req: Request, res: Response) => {
+  router.put('/:id', async (req: Request, res: Response) => {
     const id = parseId(req.params.id)
     if (id === null) {
       return errorRes(res, 400, 'VALIDATION_ERROR', 'id must be a positive integer')
@@ -121,10 +130,13 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
     }
   })
 
-  router.delete('/users/:id', async (req: Request, res: Response) => {
+  router.delete('/:id', async (req: Request, res: Response) => {
     const id = parseId(req.params.id)
     if (id === null) {
       return errorRes(res, 400, 'VALIDATION_ERROR', 'id must be a positive integer')
+    }
+    if (id === req.session.adminUserId) {
+      return errorRes(res, 403, 'FORBIDDEN', 'Cannot delete your own account')
     }
     try {
       const deleted = await adminUserService.delete(id)
@@ -135,29 +147,6 @@ export function createAdminUsersRouter(deps: AppDeps): Router {
       errorRes(res, 500, 'INTERNAL_ERROR', 'Failed to delete admin user')
     }
   })
-
-  if (pool) {
-    router.post('/login', async (req: Request, res: Response) => {
-      try {
-        const { username, password } = req.body ?? {}
-        if (typeof username !== 'string' || typeof password !== 'string') {
-          return res.status(400).json({ ok: false, error: 'Invalid payload' })
-        }
-        const result = await pool.query(
-          `SELECT id, password_hash FROM admin_users WHERE username = $1 LIMIT 1`,
-          [username]
-        )
-        if (result.rowCount === 0) return res.status(401).json({ ok: false })
-        const { password_hash } = result.rows[0]
-        const ok = await bcrypt.compare(password, password_hash)
-        if (!ok) return res.status(401).json({ ok: false })
-        return res.json({ ok: true })
-      } catch (err) {
-        console.error('admin login error:', err)
-        return res.status(500).json({ ok: false })
-      }
-    })
-  }
 
   return router
 }
